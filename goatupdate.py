@@ -73,7 +73,7 @@ def console_print(txt: str, signe="+", color="yellow", line: bool=False) -> None
 
 
 def update_command(path: str, json_data: dict):
-    console_print("update run")
+    console_print("apt command run update and upgrade")
     try:
         subprocess.run(["sudo", "apt", "update"], check=True)
         subprocess.run(["sudo", "apt", "upgrade"], check=True)
@@ -88,6 +88,9 @@ def update_command(path: str, json_data: dict):
     os.remove(path + FILE_NAME)
     with open(path + FILE_NAME, "w", encoding="utf-8") as f:
         json.dump(json_data, f)
+    
+    print(GOAT_BANNER)
+    console_print("thank you for your use", color="green")
 
 
 

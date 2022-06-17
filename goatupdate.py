@@ -75,8 +75,8 @@ def console_print(txt: str, signe="+", color="yellow", line: bool=False) -> None
 def update_command(path: str, json_data: dict):
     console_print("update run")
     try:
-        subprocess.run(["apt", "update"], check=True)
-        subprocess.run(["apt", "upgrade"], check=True)
+        subprocess.run(["sudo", "apt", "update"], check=True)
+        subprocess.run(["sudo", "apt", "upgrade"], check=True)
     except (subprocess.CalledProcessError, OSError) as e:
         console_print("An error has occurred during the apt command", color="red")
         console_print(e, "!",color="red")
@@ -144,9 +144,6 @@ def check_up_to_date(path: str):
 def main():
     args = parser.parse_args()
     print(BANNER)
-    if(os.getuid() != 0):
-        console_print("Error please run goatupdate with root right", "!", "red")
-        sys.exit(1)
     console_print("Welcome, uploadgoat check if you are up to date")
     try:
         check_up_to_date(args.path)

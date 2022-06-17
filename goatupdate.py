@@ -4,6 +4,7 @@ import argparse
 import os
 import sys
 import datetime
+import subprocess
 
 parser = None
 FILE_NAME = "goatupdate_data.json"
@@ -71,8 +72,23 @@ def console_print(txt: str, signe="+", color="yellow", line: bool=False) -> None
         print(f"{line_return}[{signe}] {txt}{COLOR['RESET']}")
 
 
-def update_command():
-    print("command run")
+def update_command(path: str, json_data: dict):
+    console_print("update run")
+    try:
+        subprocess.run(["apt", "update"], check=True)
+        subprocess.run(["apt", "upgrade"], check=True)
+    except (subprocess.CalledProcessError, OSError) as e:
+        console_print("An error has occurred during the apt command", color="red")
+        console_print(e, "!",color="red")
+        sys.exit(1)
+    except (Exception) as e:
+        console_print('An error has occurred : ', color="red")
+        console_print(e, color="red", signe=None)
+        sys.exit(1)
+    os.remove(path + FILE_NAME)
+    with open(path + FILE_NAME, "w", encoding="utf-8") as f:
+        json.dump(json_data, f)
+
 
 
 def check_up_to_date(path: str):
@@ -96,32 +112,48 @@ def check_up_to_date(path: str):
     if(os.path.exists(path + FILE_NAME)):
         # file exist read this
         console_print("data file exist, checking validity")
-        data = None
+        json_data = None
         with open(path + FILE_NAME, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        print(data)
+            json_data = json.load(f)
+        date = datetime.datetime.now().strftime("%Y-%m-%d")
+
+        if(date == json_data["date"] and json_data["update"]):
+            console_print("already up to date", color="green")
+            return
+        else:
+            json_data["date"] = date
+            update_command(path, json_data)
     else:
         # file not exist make this and run command
         console_print("data file not exist, start update and creation of file")
         console_print("run update")
         try:
+            json_data = {}
             with open(path + FILE_NAME, "w", encoding="utf-8") as f: 
-                json_data = {}
                 json_data["date"] = datetime.datetime.now().strftime("%Y-%m-%d")
                 json_data["update"] = True
                 json.dump(json_data, f)
+                
+            console_print("file created", color="green")
+            update_command(path, json_data)
         except Exception as e:
             console_print("An error has occurred for create file", "!", "red", True)
-            print(e)
+            console_print(e, "!",color="red")
             raise
-        console_print("File created", color="green")
-
 
 def main():
     args = parser.parse_args()
     print(BANNER)
+    if(os.getuid() != 0):
+        console_print("Error please run goatupdate with root right", "!", "red")
+        sys.exit(1)
     console_print("Welcome, uploadgoat check if you are up to date")
-    check_up_to_date(args.path)
+    try:
+        check_up_to_date(args.path)
+    except Exception as e:
+        console_print(f"An error has occurred during the command :")
+        console_print(e, "!",color="red")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

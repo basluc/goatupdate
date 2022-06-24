@@ -1,1 +1,7 @@
 goatupdate_data.json
+bin/
+lib/
+lib64
+share/
+include/
+pyvenv.cfg
